@@ -14,10 +14,10 @@ spec:
         autoscaling.knative.dev/minScale: "1"
         # Limit scaling to 20 pods.
         autoscaling.knative.dev/maxScale: "20"
-      name: api-{{getenvRequired "TAG"}}
+      name: app-{{getenvRequired "TAG"}}
     spec:
       containers:
         - name:  app
-          image: us.gcr.io/{{getenvRequired "PROJECT_NAME"}}/${APP_NAME}/api:{{getenvRequired "TAG"}}
+          image: us.gcr.io/{{getenvRequired "PROJECT_NAME"}}/${APP_NAME}/app:{{getenvRequired "TAG"}}
           ports:
             - containerPort: 3000
