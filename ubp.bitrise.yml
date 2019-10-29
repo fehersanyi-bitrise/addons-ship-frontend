@@ -1,0 +1,104 @@
+format_version: "4"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+app:
+workflows:
+  _auth_to_gcloud:
+    steps:
+    - script:
+        title: Authenticate to gcloud
+        inputs:
+        - content: |
+            #!/usr/bin/env bash
+            set -ex
+
+            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIAL
+            gcloud container clusters get-credentials $CLUSTER_NAME --project $PROJECT_NAME --region us-east1
+            gcloud auth configure-docker
+            gcloud config set account $GCLOUD_SERVICE_ACCOUNT
+            gcloud --quiet config set project $PROJECT_NAME
+          opts: {}
+  _deploy-docker-to-registry:
+    steps:
+    - script@1.1.5:
+        title: build
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -ex
+
+            docker-compose build ${IMAGE_NAME}
+            docker tag ${IMAGE_NAME} us.gcr.io/${PROJECT_NAME}/${APP_NAME}/${IMAGE_NAME}:${TAG}
+            docker push us.gcr.io/${PROJECT_NAME}/${APP_NAME}/${IMAGE_NAME}:${TAG}
+          opts: {}
+  _setup-gotgen:
+    steps:
+    - script@1.1.5:
+        title: gotgen install
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -ex
+
+            go get -u github.com/bitrise-io/gotgen
+          opts: {}
+  _install-kubectl:
+    steps:
+    - script:
+        title: Install kubectl
+        inputs:
+        - content: |
+            curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+            echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+            sudo apt-get update
+            sudo apt-get install -y kubectl
+          opts: {}
+  _deploy-service:
+    before_run:
+    - _setup-gotgen
+    - _install-kubectl
+    steps:
+    - script@1.1.5:
+        title: deploy a service
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -ex
+
+            cd "./_knative"
+            for i in *.gg; do
+              # shellcheck disable=SC2086
+               gotgen generate --config $BITRISE_SOURCE_DIR/gg.conf.json --file=$i
+            done
+
+            # if [ -f config.yaml ]; then
+            #   kubectl apply -f config.yaml
+            # fi
+
+            # apply the service.yaml
+            kubectl apply -f service.yaml
+            # and wait for it to get into "ready" state
+            # kubectl wait -f service.yaml --for condition=Ready
+
+            # now apply every other yaml of this service too
+            kubectl apply -f .
+          opts: {}
+  deploy-ubp-staging:
+    before_run:
+    - _auth_to_gcloud
+    - _deploy-docker-to-registry
+    - _deploy-service
+    envs:
+    - IMAGE_NAME: api
+      opts:
+        is_expand: false
+        unset: false
+  deploy-ubp-prod:
+    before_run:
+    - _auth_to_gcloud
+    - _deploy-docker-to-registry
+    - _deploy-service
+    envs:
+    - IMAGE_NAME: api
+      opts:
+        is_expand: false
+        unset: false
