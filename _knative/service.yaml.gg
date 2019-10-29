@@ -1,0 +1,23 @@
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: app
+  namespace: ship-frontend
+spec:
+  template:
+    metadata:
+      annotations:
+        # Knative concurrency-based autoscaling (default).
+        autoscaling.knative.dev/class: kpa.autoscaling.knative.dev
+        autoscaling.knative.dev/metric: concurrency
+        # # Disable scale to zero with a minScale of 1.
+        autoscaling.knative.dev/minScale: "1"
+        # Limit scaling to 20 pods.
+        autoscaling.knative.dev/maxScale: "20"
+      name: api-{{getenvRequired "TAG"}}
+    spec:
+      containers:
+        - name:  app
+          image: us.gcr.io/{{getenvRequired "PROJECT_NAME"}}/${APP_NAME}/api:{{getenvRequired "TAG"}}
+          ports:
+            - containerPort: 3000
