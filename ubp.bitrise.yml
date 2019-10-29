@@ -80,7 +80,7 @@ workflows:
             # kubectl wait -f service.yaml --for condition=Ready
 
             # now apply every other yaml of this service too
-            kubectl apply -f .
+            # kubectl apply -f .
           opts: {}
   deploy-ubp-staging:
     before_run:
@@ -88,7 +88,7 @@ workflows:
     - _deploy-docker-to-registry
     - _deploy-service
     envs:
-    - IMAGE_NAME: api
+    - IMAGE_NAME: app
       opts:
         is_expand: false
         unset: false
@@ -98,7 +98,7 @@ workflows:
     - _deploy-docker-to-registry
     - _deploy-service
     envs:
-    - IMAGE_NAME: api
+    - IMAGE_NAME: app
       opts:
         is_expand: false
         unset: false
