@@ -21,3 +21,10 @@ spec:
           image: us.gcr.io/{{getenvRequired "PROJECT_NAME"}}/${APP_NAME}/app:{{getenvRequired "TAG"}}
           ports:
             - containerPort: 3000
+          env:
+              - name: VERBOSE_LOGGING
+                value: "{{getenvRequired "VERBOSE_LOGGING"}}
+              - name: SEGMENT_WRITE_KEY
+                value: "{{getenvRequired "SEGMENT_WRITE_KEY"}}
+              - name: POLL_INTERVAL
+                value: "{{getenvRequired "POLL_INTERVAL"}}

@@ -11,4 +11,7 @@ services:
     environment:
       - SHIP_API_URL
       - APP_BASE_URL
+      - VERBOSE_LOGGING
+      - SEGMENT_WRITE_KEY
+      - POLL_INTERVAL
     restart: always
