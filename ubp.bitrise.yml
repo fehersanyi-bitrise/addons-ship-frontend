@@ -11,7 +11,7 @@ workflows:
             #!/usr/bin/env bash
             set -ex
 
-            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIAL
+            gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
             gcloud container clusters get-credentials $CLUSTER_NAME --project $PROJECT_NAME --region us-east1
             gcloud auth configure-docker
             gcloud config set account $GCLOUD_SERVICE_ACCOUNT
